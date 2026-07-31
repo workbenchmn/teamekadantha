@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact & Birthday Directory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-emerald-700 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-600 rounded-lg border border-emerald-500">
+                        <i class="fa-solid fa-file-excel text-2xl text-emerald-200"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">Member Contact & Birthday Directory</h1>
+                        <p class="text-emerald-100 text-xs mt-0.5">Structured multi-sheet dataset parsed from submission forms</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition flex items-center gap-2 border border-emerald-400/30 shadow-sm">
+                    <i class="fa-solid fa-user-plus"></i> Add Member
+                </button>
+                <button onclick="exportToExcel()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-arrow-down"></i> Export Workbook (.xlsx)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Summary Dashboard Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <i class="fa-solid fa-users text-2xl"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-slate-800" id="stat-total">22</div>
+                    <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Members</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-rose-100 text-rose-700 rounded-xl">
+                    <i class="fa-solid fa-droplet text-2xl"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-slate-800" id="stat-bloods">4</div>
+                    <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Blood Types Registered</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-amber-100 text-amber-700 rounded-xl">
+                    <i class="fa-solid fa-cake-candles text-2xl"></i>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-slate-800" id="stat-birthdays">22</div>
+                    <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">DOBs Tracked</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-sky-100 text-sky-700 rounded-xl">
+                    <i class="fa-solid fa-calendar-check text-2xl"></i>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-slate-800 truncate" id="stat-upcoming">Loading...</div>
+                    <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Next Birthday</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Directory Panel -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+            
+            <!-- Navigation Tabs -->
+            <div class="border-b border-slate-200 bg-slate-50/70 px-4 pt-3 flex flex-wrap gap-2">
+                <button onclick="switchTab('contacts')" id="tab-contacts" class="px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-emerald-600 text-emerald-700 bg-white shadow-xs">
+                    <i class="fa-solid fa-table-list text-emerald-600"></i> Sheet 1: Contact Details
+                </button>
+                <button onclick="switchTab('birthdays')" id="tab-birthdays" class="px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-cake-candles text-amber-500"></i> Sheet 2: Birthday Registry
+                </button>
+                <button onclick="switchTab('blood')" id="tab-blood" class="px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-heart-pulse text-rose-500"></i> Sheet 3: Blood Donors Summary
+                </button>
+            </div>
+
+            <!-- Controls & Filters -->
+            <div class="p-4 bg-white border-b border-slate-200 flex flex-col md:flex-row gap-3 justify-between items-center">
+                <div class="relative w-full md:w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="filterData()" placeholder="Search by name, profession, location..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition">
+                </div>
+                <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                    <select id="monthFilter" onchange="filterData()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="">All Birth Months</option>
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+
+                    <select id="bloodFilter" onchange="filterData()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="">All Blood Groups</option>
+                        <option value="A+">A+</option>
+                        <option value="B+">B+</option>
+                        <option value="O+">O+</option>
+                        <option value="AB+">AB+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- VIEW 1: Contact Details Sheet -->
+            <div id="view-contacts" class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200 uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="py-3.5 px-4 w-12 text-center">S.No</th>
+                            <th class="py-3.5 px-4">Name</th>
+                            <th class="py-3.5 px-4">Blood Group</th>
+                            <th class="py-3.5 px-4">Date of Birth</th>
+                            <th class="py-3.5 px-4">Profession</th>
+                            <th class="py-3.5 px-4">Current Location</th>
+                            <th class="py-3.5 px-4">Phone Number</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contacts-table-body" class="divide-y divide-slate-200">
+                        <!-- Rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- VIEW 2: Birthday Registry Sheet -->
+            <div id="view-birthdays" class="overflow-x-auto hidden">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-amber-50/80 text-amber-900 font-semibold border-b border-amber-200/60 uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="py-3.5 px-4 w-12 text-center">S.No</th>
+                            <th class="py-3.5 px-4">Name</th>
+                            <th class="py-3.5 px-4">Date of Birth</th>
+                            <th class="py-3.5 px-4">Birth Month</th>
+                            <th class="py-3.5 px-4">Day</th>
+                            <th class="py-3.5 px-4">Birth Year</th>
+                            <th class="py-3.5 px-4">Calculated Age</th>
+                            <th class="py-3.5 px-4">Blood Group</th>
+                        </tr>
+                    </thead>
+                    <tbody id="birthdays-table-body" class="divide-y divide-slate-200">
+                        <!-- Rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- VIEW 3: Blood Group Directory -->
+            <div id="view-blood" class="p-6 hidden bg-slate-50/50">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="blood-groups-container">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Add Member Modal -->
+    <div id="addModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Add New Directory Entry</h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="addMemberForm" onsubmit="handleAddMember(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Full Name *</label>
+                    <input type="text" id="inputName" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Blood Group *</label>
+                        <select id="inputBlood" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="A+">A+</option>
+                            <option value="B+">B+</option>
+                            <option value="O+">O+</option>
+                            <option value="AB+">AB+</option>
+                            <option value="O-">O-</option>
+                            <option value="A-">A-</option>
+                            <option value="B-">B-</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">DOB (DD/MM/YYYY) *</label>
+                        <input type="text" id="inputDob" placeholder="28/11/2001" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Profession</label>
+                        <input type="text" id="inputProfession" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Phone Number</label>
+                        <input type="text" id="inputPhone" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Location</label>
+                    <input type="text" id="inputLocation" placeholder="Mangalore, Karnataka" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Add Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { name: "Lohith", blood: "O+", dob: "02/07/1986", profession: "Business Analyst", location: "Maroli, Mangalore", phone: "9535625567" },
+            { name: "Akash R Shetty", blood: "A+", dob: "01/01/1996", profession: "Business", location: "Marakada, Mangalore", phone: "8660098828, 9481843478" },
+            { name: "K Aditya Bhat", blood: "O-", dob: "28/11/2001", profession: "Proprietor", location: "Kadri, Mangalore, Karnataka", phone: "9480103321" },
+            { name: "Eleyaraja", blood: "O+", dob: "22/01/2000", profession: "Screen Printer", location: "Mangaluru", phone: "-" },
+            { name: "Vidwath Shetty", blood: "O+", dob: "17/02/1999", profession: "Advocate", location: "Mangaluru", phone: "6360397511" },
+            { name: "Gurucharan R Shetty", blood: "AB+", dob: "01/04/2000", profession: "Business", location: "Kudla, Mangalore", phone: "9632353351" },
+            { name: "Chethan Shetty", blood: "O-", dob: "31/07/2000", profession: "HR in Ocean Pearl", location: "Mangalore", phone: "6363819446" },
+            { name: "Kiran Kumar", blood: "A+", dob: "23/12/1999", profession: "SDE", location: "Mangalore, Karnataka", phone: "9880537529" },
+            { name: "Nishchal R", blood: "A+", dob: "05/11/1999", profession: "Student", location: "Mangalore, Karnataka", phone: "9108850569" },
+            { name: "K Ashwin Pai", blood: "A+", dob: "12/11/2000", profession: "Business", location: "Mangalore", phone: "7483328885" },
+            { name: "Shavan Shetty", blood: "O+", dob: "11/08/1996", profession: "Civil Engineer", location: "Kunjathbail, Mangalore, Karnataka", phone: "+918762037951" },
+            { name: "Pranam", blood: "O+", dob: "08/05/2002", profession: "Student", location: "Kulashekara, Mangalore", phone: "-" },
+            { name: "Amith", blood: "A+", dob: "06/07/2000", profession: "Unemployed", location: "Mangalore, Karnataka", phone: "7348963174" },
+            { name: "Dhanraj", blood: "B+", dob: "22/07/1992", profession: "Loan Finance", location: "Jeppinamogaru, Mangalore, Karnataka", phone: "+918851324379" },
+            { name: "Nishal Shetty", blood: "B+", dob: "17/08/1995", profession: "Business Analyst", location: "Bengaluru, KA", phone: "9901382774" },
+            { name: "Shashank Mayya", blood: "A+", dob: "25/11/1996", profession: "Arecanut Trader", location: "Bantwal", phone: "8105364870" },
+            { name: "Sagar", blood: "B+", dob: "17/11/1996", profession: "Sales", location: "Jappinamogaru, Mangaluru, Karnataka", phone: "9844518021, 9148376253" },
+            { name: "Jeethan Devadiga", blood: "A+", dob: "22/09/1996", profession: "-", location: "Gorigudda, Kankanady, Mangalore", phone: "7760212906" },
+            { name: "Ranjith", blood: "B+", dob: "24/07/1996", profession: "-", location: "Shaktinagara, Mangalore", phone: "9663666347" },
+            { name: "Arjun", blood: "B+", dob: "29/03/1997", profession: "Hotel Management", location: "Kunjathbail, Mangalore, Karnataka", phone: "7975155191, 9731146398" },
+            { name: "Goutham Sheregar", blood: "A+", dob: "28/04/2000", profession: "QA Engineer", location: "Bengaluru (Perm: Kundapura)", phone: "9620025247" },
+            { name: "Harshith M P", blood: "A+", dob: "22/10/2000", profession: "Store Manager at Bharath Chicken", location: "Pumpwell, Mangalore", phone: "7022144206" }
+        ];
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function parseDOB(dobStr) {
+            if (!dobStr || dobStr === "-") return null;
+            const parts = dobStr.split(/[\/-]/);
+            if (parts.length === 3) {
+                let day = parseInt(parts[0], 10);
+                let month = parseInt(parts[1], 10) - 1;
+                let year = parseInt(parts[2], 10);
+                if (year < 100) year += 1900;
+                return { day, month, year, monthName: monthNames[month] };
+            }
+            return null;
+        }
+
+        function calculateAge(parsedDob) {
+            if (!parsedDob) return "N/A";
+            const today = new Date();
+            let age = today.getFullYear() - parsedDob.year;
+            const m = today.getMonth() - parsedDob.month;
+            if (m < 0 || (m === 0 && today.getDate() < parsedDob.day)) {
+                age--;
+            }
+            return age;
+        }
+
+        function getBloodBadge(blood) {
+            if (blood.includes('O-')) return `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood} (Universal Donor)</span>`;
+            if (blood.includes('+')) return `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood}</span>`;
+            return `<span class="bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood}</span>`;
+        }
+
+        function renderTables(data) {
+            // Contacts Table
+            const contactsBody = document.getElementById('contacts-table-body');
+            contactsBody.innerHTML = '';
+            
+            data.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center font-medium text-slate-400">${index + 1}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
+                    <td class="py-3 px-4">${getBloodBadge(item.blood)}</td>
+                    <td class="py-3 px-4 font-mono text-xs text-slate-600">${item.dob}</td>
+                    <td class="py-3 px-4 text-slate-600">${item.profession}</td>
+                    <td class="py-3 px-4 text-slate-600">${item.location}</td>
+                    <td class="py-3 px-4 font-mono text-xs text-emerald-700 font-medium">${item.phone}</td>
+                `;
+                contactsBody.appendChild(tr);
+            });
+
+            // Birthdays Table (Sorted Chronologically by Month & Day)
+            const birthdaysBody = document.getElementById('birthdays-table-body');
+            birthdaysBody.innerHTML = '';
+
+            const bdayList = data.map(item => {
+                const parsed = parseDOB(item.dob);
+                return { ...item, parsed, age: calculateAge(parsed) };
+            }).filter(item => item.parsed !== null)
+            .sort((a, b) => {
+                if (a.parsed.month !== b.parsed.month) return a.parsed.month - b.parsed.month;
+                return a.parsed.day - b.parsed.day;
+            });
+
+            bdayList.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-amber-50/40 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center font-medium text-slate-400">${index + 1}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
+                    <td class="py-3 px-4 font-mono text-xs">${item.dob}</td>
+                    <td class="py-3 px-4 font-medium text-amber-800"><span class="bg-amber-100/80 px-2 py-0.5 rounded text-xs">${item.parsed.monthName}</span></td>
+                    <td class="py-3 px-4 font-bold text-slate-700">${item.parsed.day}</td>
+                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${item.parsed.year}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-700">${item.age} yrs</td>
+                    <td class="py-3 px-4">${getBloodBadge(item.blood)}</td>
+                `;
+                birthdaysBody.appendChild(tr);
+            });
+
+            // Blood Group Cards Summary
+            const bloodContainer = document.getElementById('blood-groups-container');
+            bloodContainer.innerHTML = '';
+            const groupedByBlood = {};
+            
+            data.forEach(item => {
+                const bg = item.blood.toUpperCase();
+                if (!groupedByBlood[bg]) groupedByBlood[bg] = [];
+                groupedByBlood[bg].push(item);
+            });
+
+            Object.keys(groupedByBlood).forEach(group => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                            <span class="text-xl font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-lg border border-rose-100">${group}</span>
+                            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">${groupedByBlood[group].length} Member(s)</span>
+                        </div>
+                        <ul class="space-y-2.5">
+                            ${groupedByBlood[group].map(person => `
+                                <li class="flex justify-between items-center text-sm py-1 border-b border-slate-50">
+                                    <div>
+                                        <div class="font-semibold text-slate-800">${person.name}</div>
+                                        <div class="text-xs text-slate-400"><i class="fa-solid fa-location-dot text-slate-300 mr-1"></i>${person.location}</div>
+                                    </div>
+                                    <div class="text-right font-mono text-xs text-emerald-700 font-medium">${person.phone !== '-' ? person.phone.split(',')[0] : 'N/A'}</div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+                bloodContainer.appendChild(card);
+            });
+
+            // Update stats
+            document.getElementById('stat-total').innerText = rawData.length;
+            document.getElementById('stat-bloods').innerText = Object.keys(groupedByBlood).length;
+            document.getElementById('stat-birthdays').innerText = rawData.filter(i => i.dob !== '-').length;
+
+            // Calculate next upcoming birthday
+            updateNextBirthday(bdayList);
+        }
+
+        function updateNextBirthday(bdayList) {
+            if (!bdayList || bdayList.length === 0) {
+                document.getElementById('stat-upcoming').innerText = "None";
+                return;
+            }
+
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentDay = today.getDate();
+
+            // Find next birthday starting today
+            let next = bdayList.find(b => b.parsed.month > currentMonth || (b.parsed.month === currentMonth && b.parsed.day >= currentDay));
+            if (!next) next = bdayList[0]; // Loop to first next year
+
+            document.getElementById('stat-upcoming').innerText = `${next.name} (${next.parsed.day} ${next.parsed.monthName.substring(0,3)})`;
+        }
+
+        function filterData() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const blood = document.getElementById('bloodFilter').value;
+            const month = document.getElementById('monthFilter').value;
+
+            const filtered = rawData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(query) ||
+                                      item.profession.toLowerCase().includes(query) ||
+                                      item.location.toLowerCase().includes(query);
+                
+                const matchesBlood = blood === "" || item.blood.toUpperCase() === blood.toUpperCase();
+                
+                const parsed = parseDOB(item.dob);
+                const matchesMonth = month === "" || (parsed && parsed.month.toString() === month);
+
+                return matchesSearch && matchesBlood && matchesMonth;
+            });
+
+            renderTables(filtered);
+        }
+
+        function switchTab(tab) {
+            const tabs = ['contacts', 'birthdays', 'blood'];
+            tabs.forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const tabBtn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    view.classList.remove('hidden');
+                    tabBtn.className = "px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-emerald-600 text-emerald-700 bg-white shadow-xs";
+                } else {
+                    view.classList.add('hidden');
+                    tabBtn.className = "px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900";
+                }
+            });
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            document.getElementById('addModal').classList.add('flex');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addModal').classList.remove('flex');
+            document.getElementById('addMemberForm').reset();
+        }
+
+        function handleAddMember(e) {
+            e.preventDefault();
+            const newMember = {
+                name: document.getElementById('inputName').value,
+                blood: document.getElementById('inputBlood').value,
+                dob: document.getElementById('inputDob').value,
+                profession: document.getElementById('inputProfession').value || "-",
+                location: document.getElementById('inputLocation').value || "-",
+                phone: document.getElementById('inputPhone').value || "-"
+            };
+
+            rawData.push(newMember);
+            renderTables(rawData);
+            closeAddModal();
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: All Contact Details
+            const contactsSheetData = rawData.map((item, idx) => ({
+                "S.No": idx + 1,
+                "Name": item.name,
+                "Blood Group": item.blood,
+                "Date of Birth": item.dob,
+                "Profession": item.profession,
+                "Current Location": item.location,
+                "Phone Number": item.phone
+            }));
+            const wsContacts = XLSX.utils.json_to_sheet(contactsSheetData);
+            XLSX.utils.book_append_sheet(wb, wsContacts, "Contact Details");
+
+            // Sheet 2: Birthday Registry (Chronological)
+            const bdayList = rawData.map(item => {
+                const parsed = parseDOB(item.dob);
+                return { ...item, parsed, age: calculateAge(parsed) };
+            }).filter(item => item.parsed !== null)
+            .sort((a, b) => {
+                if (a.parsed.month !== b.parsed.month) return a.parsed.month - b.parsed.month;
+                return a.parsed.day - b.parsed.day;
+            });
+
+            const birthdaySheetData = bdayList.map((item, idx) => ({
+                "S.No": idx + 1,
+                "Name": item.name,
+                "Date of Birth": item.dob,
+                "Birth Month": item.parsed.monthName,
+                "Day": item.parsed.day,
+                "Birth Year": item.parsed.year,
+                "Calculated Age": item.age,
+                "Blood Group": item.blood,
+                "Phone Number": item.phone
+            }));
+            const wsBirthdays = XLSX.utils.json_to_sheet(birthdaySheetData);
+            XLSX.utils.book_append_sheet(wb, wsBirthdays, "Birthday Registry");
+
+            // Save file
+            XLSX.writeFile(wb, "Mangalore_Members_Directory.xlsx");
+        }
+
+        // Initialize table on load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTables(rawData);
+        });
+    </script>
+</body>
+</html>
