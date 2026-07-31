@@ -240,286 +240,265 @@
     </div>
 
     <script>
-        const rawData = [
-            { name: "Lohith", blood: "O+", dob: "02/07/1986", profession: "Business Analyst", location: "Maroli, Mangalore", phone: "9535625567" },
-            { name: "Akash R Shetty", blood: "A+", dob: "01/01/1996", profession: "Business", location: "Marakada, Mangalore", phone: "8660098828, 9481843478" },
-            { name: "K Aditya Bhat", blood: "O-", dob: "28/11/2001", profession: "Proprietor", location: "Kadri, Mangalore, Karnataka", phone: "9480103321" },
-            { name: "Eleyaraja", blood: "O+", dob: "22/01/2000", profession: "Screen Printer", location: "Mangaluru", phone: "9902536253" },
-            { name: "Vidwath Shetty", blood: "O+", dob: "17/02/1999", profession: "Advocate", location: "Mangaluru", phone: "6360397511" },
-            { name: "Gurucharan R Shetty", blood: "AB+", dob: "01/04/2000", profession: "Business", location: "Kudla, Mangalore", phone: "9632353351" },
-            { name: "Chethan Shetty", blood: "O-", dob: "31/07/2000", profession: "HR in Ocean Pearl", location: "Mangalore", phone: "6363819446" },
-            { name: "Kiran Kumar", blood: "A+", dob: "23/12/1999", profession: "SDE", location: "Mangalore, Karnataka", phone: "9880537529" },
-            { name: "Nishchal R", blood: "A+", dob: "05/11/1999", profession: "Student", location: "Mangalore, Karnataka", phone: "9108850569" },
-            { name: "K Ashwin Pai", blood: "A+", dob: "12/11/2000", profession: "Business", location: "Mangalore", phone: "7483328885" },
-            { name: "Shavan Shetty", blood: "O+", dob: "11/08/1996", profession: "Civil Engineer", location: "Kunjathbail, Mangalore, Karnataka", phone: "8762037951" },
-            { name: "Pranam", blood: "O+", dob: "08/05/2002", profession: "Student", location: "Kulashekara, Mangalore", phone: "9731146398" },
-            { name: "Amith", blood: "A+", dob: "06/07/2000", profession: "Store Manager", location: "Mangalore, Karnataka", phone: "7348963174" },
-            { name: "Dhanraj", blood: "B+", dob: "22/07/1992", profession: "Loan Finance", location: "Jeppinamogaru, Mangalore, Karnataka", phone: "8951324379" },
-            { name: "Nishal Shetty", blood: "B+", dob: "17/08/1995", profession: "Business Analyst", location: "Bengaluru, KA", phone: "9901382774" },
-            { name: "Shashank Mayya", blood: "A+", dob: "25/11/1996", profession: "Arecanut Trader", location: "Bantwal", phone: "8105364870" },
-            { name: "Sagar", blood: "B+", dob: "17/11/1996", profession: "Sales", location: "Jappinamogaru, Mangaluru, Karnataka", phone: "9844518021, 9148376253" },
-            { name: "Jeethan Devadiga", blood: "A+", dob: "22/09/1996", profession: "-", location: "Gorigudda, Kankanady, Mangalore", phone: "7760212906" },
-            { name: "Ranjith", blood: "B+", dob: "24/07/1996", profession: "-", location: "Shaktinagara, Mangalore", phone: "9663666347" },
-            { name: "Arjun", blood: "B+", dob: "29/03/1997", profession: "Hotel Management", location: "Kunjathbail, Mangalore, Karnataka", phone: "7975155191, 9731146398" },
-            { name: "Goutham Sheregar", blood: "A+", dob: "28/04/2000", profession: "QA Engineer", location: "Bengaluru (Perm: Kundapura)", phone: "9620025247" },
-            { name: "Harshith M P", blood: "A+", dob: "22/10/2000", profession: "Retail Manager", location: "Pumpwell, Mangalore", phone: "7022144206" }
-        ];
+    const API_URL = "https://sheetdb.io/api/v1/yoi2cf0rpzip5";
+    let rawData = [];
 
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        function parseDOB(dobStr) {
-            if (!dobStr || dobStr === "-") return null;
-            const parts = dobStr.split(/[\/-]/);
-            if (parts.length === 3) {
-                let day = parseInt(parts[0], 10);
-                let month = parseInt(parts[1], 10) - 1;
-                let year = parseInt(parts[2], 10);
-                if (year < 100) year += 1900;
-                return { day, month, year, monthName: monthNames[month] };
-            }
-            return null;
-        }
-
-        function calculateAge(parsedDob) {
-            if (!parsedDob) return "N/A";
-            const today = new Date();
-            let age = today.getFullYear() - parsedDob.year;
-            const m = today.getMonth() - parsedDob.month;
-            if (m < 0 || (m === 0 && today.getDate() < parsedDob.day)) {
-                age--;
-            }
-            return age;
-        }
-
-        function getBloodBadge(blood) {
-            if (blood.includes('O-')) return `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood} (Universal Donor)</span>`;
-            if (blood.includes('+')) return `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood}</span>`;
-            return `<span class="bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood}</span>`;
-        }
-
-        function renderTables(data) {
-            // Contacts Table
-            const contactsBody = document.getElementById('contacts-table-body');
-            contactsBody.innerHTML = '';
-            
-            data.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-                
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-center font-medium text-slate-400">${index + 1}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
-                    <td class="py-3 px-4">${getBloodBadge(item.blood)}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-slate-600">${item.dob}</td>
-                    <td class="py-3 px-4 text-slate-600">${item.profession}</td>
-                    <td class="py-3 px-4 text-slate-600">${item.location}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-emerald-700 font-medium">${item.phone}</td>
-                `;
-                contactsBody.appendChild(tr);
-            });
-
-            // Birthdays Table (Sorted Chronologically by Month & Day)
-            const birthdaysBody = document.getElementById('birthdays-table-body');
-            birthdaysBody.innerHTML = '';
-
-            const bdayList = data.map(item => {
-                const parsed = parseDOB(item.dob);
-                return { ...item, parsed, age: calculateAge(parsed) };
-            }).filter(item => item.parsed !== null)
-            .sort((a, b) => {
-                if (a.parsed.month !== b.parsed.month) return a.parsed.month - b.parsed.month;
-                return a.parsed.day - b.parsed.day;
-            });
-
-            bdayList.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-amber-50/40 transition border-b border-slate-100";
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-center font-medium text-slate-400">${index + 1}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
-                    <td class="py-3 px-4 font-mono text-xs">${item.dob}</td>
-                    <td class="py-3 px-4 font-medium text-amber-800"><span class="bg-amber-100/80 px-2 py-0.5 rounded text-xs">${item.parsed.monthName}</span></td>
-                    <td class="py-3 px-4 font-bold text-slate-700">${item.parsed.day}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-slate-500">${item.parsed.year}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-700">${item.age} yrs</td>
-                    <td class="py-3 px-4">${getBloodBadge(item.blood)}</td>
-                `;
-                birthdaysBody.appendChild(tr);
-            });
-
-            // Blood Group Cards Summary
-            const bloodContainer = document.getElementById('blood-groups-container');
-            bloodContainer.innerHTML = '';
-            const groupedByBlood = {};
-            
-            data.forEach(item => {
-                const bg = item.blood.toUpperCase();
-                if (!groupedByBlood[bg]) groupedByBlood[bg] = [];
-                groupedByBlood[bg].push(item);
-            });
-
-            Object.keys(groupedByBlood).forEach(group => {
-                const card = document.createElement('div');
-                card.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between";
-                card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                            <span class="text-xl font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-lg border border-rose-100">${group}</span>
-                            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">${groupedByBlood[group].length} Member(s)</span>
-                        </div>
-                        <ul class="space-y-2.5">
-                            ${groupedByBlood[group].map(person => `
-                                <li class="flex justify-between items-center text-sm py-1 border-b border-slate-50">
-                                    <div>
-                                        <div class="font-semibold text-slate-800">${person.name}</div>
-                                        <div class="text-xs text-slate-400"><i class="fa-solid fa-location-dot text-slate-300 mr-1"></i>${person.location}</div>
-                                    </div>
-                                    <div class="text-right font-mono text-xs text-emerald-700 font-medium">${person.phone !== '-' ? person.phone.split(',')[0] : 'N/A'}</div>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-                `;
-                bloodContainer.appendChild(card);
-            });
-
-            // Update stats
-            document.getElementById('stat-total').innerText = rawData.length;
-            document.getElementById('stat-bloods').innerText = Object.keys(groupedByBlood).length;
-            document.getElementById('stat-birthdays').innerText = rawData.filter(i => i.dob !== '-').length;
-
-            // Calculate next upcoming birthday
-            updateNextBirthday(bdayList);
-        }
-
-        function updateNextBirthday(bdayList) {
-            if (!bdayList || bdayList.length === 0) {
-                document.getElementById('stat-upcoming').innerText = "None";
-                return;
-            }
-
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentDay = today.getDate();
-
-            // Find next birthday starting today
-            let next = bdayList.find(b => b.parsed.month > currentMonth || (b.parsed.month === currentMonth && b.parsed.day >= currentDay));
-            if (!next) next = bdayList[0]; // Loop to first next year
-
-            document.getElementById('stat-upcoming').innerText = `${next.name} (${next.parsed.day} ${next.parsed.monthName.substring(0,3)})`;
-        }
-
-        function filterData() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const blood = document.getElementById('bloodFilter').value;
-            const month = document.getElementById('monthFilter').value;
-
-            const filtered = rawData.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(query) ||
-                                      item.profession.toLowerCase().includes(query) ||
-                                      item.location.toLowerCase().includes(query);
-                
-                const matchesBlood = blood === "" || item.blood.toUpperCase() === blood.toUpperCase();
-                
-                const parsed = parseDOB(item.dob);
-                const matchesMonth = month === "" || (parsed && parsed.month.toString() === month);
-
-                return matchesSearch && matchesBlood && matchesMonth;
-            });
-
-            renderTables(filtered);
-        }
-
-        function switchTab(tab) {
-            const tabs = ['contacts', 'birthdays', 'blood'];
-            tabs.forEach(t => {
-                const view = document.getElementById(`view-${t}`);
-                const tabBtn = document.getElementById(`tab-${t}`);
-                if (t === tab) {
-                    view.classList.remove('hidden');
-                    tabBtn.className = "px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-emerald-600 text-emerald-700 bg-white shadow-xs";
-                } else {
-                    view.classList.add('hidden');
-                    tabBtn.className = "px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900";
-                }
-            });
-        }
-
-        function openAddModal() {
-            document.getElementById('addModal').classList.remove('hidden');
-            document.getElementById('addModal').classList.add('flex');
-        }
-
-        function closeAddModal() {
-            document.getElementById('addModal').classList.add('hidden');
-            document.getElementById('addModal').classList.remove('flex');
-            document.getElementById('addMemberForm').reset();
-        }
-
-        function handleAddMember(e) {
-            e.preventDefault();
-            const newMember = {
-                name: document.getElementById('inputName').value,
-                blood: document.getElementById('inputBlood').value,
-                dob: document.getElementById('inputDob').value,
-                profession: document.getElementById('inputProfession').value || "-",
-                location: document.getElementById('inputLocation').value || "-",
-                phone: document.getElementById('inputPhone').value || "-"
-            };
-
-            rawData.push(newMember);
+    // 1. Fetch live data from Google Sheet on load
+    async function loadDataFromSheet() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            rawData = data;
             renderTables(rawData);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }
+
+    // 2. Save new entry directly to Google Sheet
+    async function handleAddMember(e) {
+        e.preventDefault();
+        
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.innerText = "Saving...";
+        submitBtn.disabled = true;
+
+        const newMember = {
+            name: document.getElementById('inputName').value,
+            blood: document.getElementById('inputBlood').value,
+            dob: document.getElementById('inputDob').value,
+            profession: document.getElementById('inputProfession').value || "-",
+            location: document.getElementById('inputLocation').value || "-",
+            phone: document.getElementById('inputPhone').value || "-"
+        };
+
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: [newMember] })
+            });
+
+            await loadDataFromSheet();
             closeAddModal();
+        } catch (error) {
+            alert("Failed to save entry. Please try again.");
+            console.error(error);
+        } finally {
+            submitBtn.innerText = "Add Record";
+            submitBtn.disabled = false;
         }
+    }
 
-        function exportToExcel() {
-            const wb = XLSX.utils.book_new();
-
-            // Sheet 1: All Contact Details
-            const contactsSheetData = rawData.map((item, idx) => ({
-                "S.No": idx + 1,
-                "Name": item.name,
-                "Blood Group": item.blood,
-                "Date of Birth": item.dob,
-                "Profession": item.profession,
-                "Current Location": item.location,
-                "Phone Number": item.phone
-            }));
-            const wsContacts = XLSX.utils.json_to_sheet(contactsSheetData);
-            XLSX.utils.book_append_sheet(wb, wsContacts, "Contact Details");
-
-            // Sheet 2: Birthday Registry (Chronological)
-            const bdayList = rawData.map(item => {
-                const parsed = parseDOB(item.dob);
-                return { ...item, parsed, age: calculateAge(parsed) };
-            }).filter(item => item.parsed !== null)
-            .sort((a, b) => {
-                if (a.parsed.month !== b.parsed.month) return a.parsed.month - b.parsed.month;
-                return a.parsed.day - b.parsed.day;
-            });
-
-            const birthdaySheetData = bdayList.map((item, idx) => ({
-                "S.No": idx + 1,
-                "Name": item.name,
-                "Date of Birth": item.dob,
-                "Birth Month": item.parsed.monthName,
-                "Day": item.parsed.day,
-                "Birth Year": item.parsed.year,
-                "Calculated Age": item.age,
-                "Blood Group": item.blood,
-                "Phone Number": item.phone
-            }));
-            const wsBirthdays = XLSX.utils.json_to_sheet(birthdaySheetData);
-            XLSX.utils.book_append_sheet(wb, wsBirthdays, "Birthday Registry");
-
-            // Save file
-            XLSX.writeFile(wb, "Mangalore_Members_Directory.xlsx");
+    function parseDOB(dobStr) {
+        if (!dobStr || dobStr === "-") return null;
+        const parts = dobStr.split(/[\/-]/);
+        if (parts.length === 3) {
+            let day = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10) - 1;
+            let year = parseInt(parts[2], 10);
+            if (year < 100) year += 1900;
+            return { day, month, year, monthName: monthNames[month] };
         }
+        return null;
+    }
 
-        // Initialize table on load
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTables(rawData);
+    function calculateAge(parsedDob) {
+        if (!parsedDob) return "N/A";
+        const today = new Date();
+        let age = today.getFullYear() - parsedDob.year;
+        const m = today.getMonth() - parsedDob.month;
+        if (m < 0 || (m === 0 && today.getDate() < parsedDob.day)) {
+            age--;
+        }
+        return age;
+    }
+
+    function getBloodBadge(blood) {
+        if (!blood) return '';
+        if (blood.includes('O-')) return `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood} (Universal Donor)</span>`;
+        if (blood.includes('+')) return `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood}</span>`;
+        return `<span class="bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 rounded-full font-bold text-xs">${blood}</span>`;
+    }
+
+    function renderTables(data) {
+        const contactsBody = document.getElementById('contacts-table-body');
+        contactsBody.innerHTML = '';
+        
+        data.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+            tr.innerHTML = `
+                <td class="py-3 px-4 text-center font-medium text-slate-400">${index + 1}</td>
+                <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
+                <td class="py-3 px-4">${getBloodBadge(item.blood)}</td>
+                <td class="py-3 px-4 font-mono text-xs text-slate-600">${item.dob}</td>
+                <td class="py-3 px-4 text-slate-600">${item.profession}</td>
+                <td class="py-3 px-4 text-slate-600">${item.location}</td>
+                <td class="py-3 px-4 font-mono text-xs text-emerald-700 font-medium">${item.phone}</td>
+            `;
+            contactsBody.appendChild(tr);
         });
-    </script>
+
+        // Birthdays Table
+        const birthdaysBody = document.getElementById('birthdays-table-body');
+        birthdaysBody.innerHTML = '';
+
+        const bdayList = data.map(item => {
+            const parsed = parseDOB(item.dob);
+            return { ...item, parsed, age: calculateAge(parsed) };
+        }).filter(item => item.parsed !== null)
+        .sort((a, b) => {
+            if (a.parsed.month !== b.parsed.month) return a.parsed.month - b.parsed.month;
+            return a.parsed.day - b.parsed.day;
+        });
+
+        bdayList.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-amber-50/40 transition border-b border-slate-100";
+            tr.innerHTML = `
+                <td class="py-3 px-4 text-center font-medium text-slate-400">${index + 1}</td>
+                <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
+                <td class="py-3 px-4 font-mono text-xs">${item.dob}</td>
+                <td class="py-3 px-4 font-medium text-amber-800"><span class="bg-amber-100/80 px-2 py-0.5 rounded text-xs">${item.parsed.monthName}</span></td>
+                <td class="py-3 px-4 font-bold text-slate-700">${item.parsed.day}</td>
+                <td class="py-3 px-4 font-mono text-xs text-slate-500">${item.parsed.year}</td>
+                <td class="py-3 px-4 font-semibold text-slate-700">${item.age} yrs</td>
+                <td class="py-3 px-4">${getBloodBadge(item.blood)}</td>
+            `;
+            birthdaysBody.appendChild(tr);
+        });
+
+        // Blood Cards
+        const bloodContainer = document.getElementById('blood-groups-container');
+        bloodContainer.innerHTML = '';
+        const groupedByBlood = {};
+        
+        data.forEach(item => {
+            if (!item.blood) return;
+            const bg = item.blood.toUpperCase();
+            if (!groupedByBlood[bg]) groupedByBlood[bg] = [];
+            groupedByBlood[bg].push(item);
+        });
+
+        Object.keys(groupedByBlood).forEach(group => {
+            const card = document.createElement('div');
+            card.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between";
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                        <span class="text-xl font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-lg border border-rose-100">${group}</span>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">${groupedByBlood[group].length} Member(s)</span>
+                    </div>
+                    <ul class="space-y-2.5">
+                        ${groupedByBlood[group].map(person => `
+                            <li class="flex justify-between items-center text-sm py-1 border-b border-slate-50">
+                                <div>
+                                    <div class="font-semibold text-slate-800">${person.name}</div>
+                                    <div class="text-xs text-slate-400"><i class="fa-solid fa-location-dot text-slate-300 mr-1"></i>${person.location}</div>
+                                </div>
+                                <div class="text-right font-mono text-xs text-emerald-700 font-medium">${person.phone !== '-' ? person.phone.split(',')[0] : 'N/A'}</div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+            bloodContainer.appendChild(card);
+        });
+
+        document.getElementById('stat-total').innerText = data.length;
+        document.getElementById('stat-bloods').innerText = Object.keys(groupedByBlood).length;
+        document.getElementById('stat-birthdays').innerText = data.filter(i => i.dob && i.dob !== '-').length;
+
+        updateNextBirthday(bdayList);
+    }
+
+    function updateNextBirthday(bdayList) {
+        if (!bdayList || bdayList.length === 0) {
+            document.getElementById('stat-upcoming').innerText = "None";
+            return;
+        }
+
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentDay = today.getDate();
+
+        let next = bdayList.find(b => b.parsed.month > currentMonth || (b.parsed.month === currentMonth && b.parsed.day >= currentDay));
+        if (!next) next = bdayList[0];
+
+        document.getElementById('stat-upcoming').innerText = `${next.name} (${next.parsed.day} ${next.parsed.monthName.substring(0,3)})`;
+    }
+
+    function filterData() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const blood = document.getElementById('bloodFilter').value;
+        const month = document.getElementById('monthFilter').value;
+
+        const filtered = rawData.filter(item => {
+            const matchesSearch = (item.name && item.name.toLowerCase().includes(query)) ||
+                                  (item.profession && item.profession.toLowerCase().includes(query)) ||
+                                  (item.location && item.location.toLowerCase().includes(query));
+            
+            const matchesBlood = blood === "" || (item.blood && item.blood.toUpperCase() === blood.toUpperCase());
+            
+            const parsed = parseDOB(item.dob);
+            const matchesMonth = month === "" || (parsed && parsed.month.toString() === month);
+
+            return matchesSearch && matchesBlood && matchesMonth;
+        });
+
+        renderTables(filtered);
+    }
+
+    function switchTab(tab) {
+        const tabs = ['contacts', 'birthdays', 'blood'];
+        tabs.forEach(t => {
+            const view = document.getElementById(`view-${t}`);
+            const tabBtn = document.getElementById(`tab-${t}`);
+            if (t === tab) {
+                view.classList.remove('hidden');
+                tabBtn.className = "px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-emerald-600 text-emerald-700 bg-white shadow-xs";
+            } else {
+                view.classList.add('hidden');
+                tabBtn.className = "px-5 py-2.5 font-medium text-sm rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-slate-600 hover:text-slate-900";
+            }
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById('addModal').classList.remove('hidden');
+        document.getElementById('addModal').classList.add('flex');
+    }
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.add('hidden');
+        document.getElementById('addModal').classList.remove('flex');
+        document.getElementById('addMemberForm').reset();
+    }
+
+    function exportToExcel() {
+        const wb = XLSX.utils.book_new();
+
+        const contactsSheetData = rawData.map((item, idx) => ({
+            "S.No": idx + 1,
+            "Name": item.name,
+            "Blood Group": item.blood,
+            "Date of Birth": item.dob,
+            "Profession": item.profession,
+            "Current Location": item.location,
+            "Phone Number": item.phone
+        }));
+        const wsContacts = XLSX.utils.json_to_sheet(contactsSheetData);
+        XLSX.utils.book_append_sheet(wb, wsContacts, "Contact Details");
+
+        XLSX.writeFile(wb, "Members_Directory.xlsx");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDataFromSheet();
+    });
+ </script>
 </body>
 </html>
